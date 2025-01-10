@@ -3,6 +3,7 @@ import pandas as pd
 from typing import Dict, List, Tuple, Any
 from nltk.corpus import wordnet
 
+from Utils.Enums import TopicTheme
 from Utils.UtilityFunctions import get_topic_sentences
 
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
@@ -177,7 +178,9 @@ def print_sentiment_analysis(manifesto_data, party_names, party_topics, model):
 		for item in manifesto.text_items:
 			text += item.text + ' '
 		manifesto_texts[party_names[i]] = text.strip()
-		print(f"Processed {party_names[i]} manifesto - {len(text)} characters")
+		print(f""
+		      f"Processed {party_names[i]} manifesto - {len(text)} characters"
+		      f"")
 
 	# topic words dictionary
 	party_topics_words = {}
@@ -188,7 +191,7 @@ def print_sentiment_analysis(manifesto_data, party_names, party_topics, model):
 			for word, _ in model.get_topic(topic_id)[:10]:
 				words.append(word)
 			topic_words.append(words)
-			print(f"{party} Topic {topic_id}: {', '.join(words)}")
+			print(f"{party} Topic: {TopicTheme.get_name(topic_id)}: {', '.join(words)}")
 		party_topics_words[party] = topic_words
 
 	results_df, sentence_df = sentiment_analyzer.analyze_all_parties(
@@ -206,6 +209,8 @@ def print_sentiment_analysis(manifesto_data, party_names, party_topics, model):
 	print(results_df)
 
 	# Sample propoziiti
+	# Limitari vader: e cam antrenat pentru social media, influentat destul de tare de punctuatie si caps,
+	# iar atunci cand vine vorba de cuvinte inerent negative gen "burden", chiar daca e "reduce burden", tot o duce spre negativ
 	print("\nMost Significant Sentences by Party:")
 	for party in party_names:
 		party_data = sentence_df[sentence_df['Party'] == party]
