@@ -2,10 +2,6 @@
 
 ## Example output:
 
-# political-manifestos-analysis
-
-## Example output:
-
 ```
 Fetching 5 manifestos...
 Successfully fetched manifesto: 93223_201612  
