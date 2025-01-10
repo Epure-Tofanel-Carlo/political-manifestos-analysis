@@ -155,3 +155,22 @@ class RomanianParty(Enum):
 			return cls(party_id).name
 		except ValueError:
 			return f"Unknown Party ({party_id})"
+
+class TopicTheme(Enum):
+    HEALTHCARE = 0              # health, hospital, patient
+    PUBLIC_ADMINISTRATION = 1           # public administration, service
+    YOUTH_EDUCATION = 3        # young, people, sport, education
+    ENERGY_ENVIRONMENT = 4     # energy, forest, electricity
+    ECONOMY_FINANCE = 5        # tax, income, gdp
+    INFRASTRUCTURE = 6         # port, infrastructure, transport
+    EDUCATION_REFORM = 7       # education, teacher, student
+    CULTURE_IDENTITY = 8       # cultural, culture, artist
+    INTERNATIONAL_RELATIONS = 9         # partnership, strategic, security
+    REGIONAL_COMMUNITY = 10    # transylvania, community, family
+
+    @classmethod
+    def get_name(cls, topic_id: int) -> str:
+        try:
+            return cls(topic_id).name.replace('_', ' ').title()
+        except ValueError:
+            return f"Topic {topic_id}"

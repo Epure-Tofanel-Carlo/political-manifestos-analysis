@@ -7,7 +7,7 @@ import pandas as pd
 import requests
 import json
 from typing import List, Optional, Dict, Any
-
+from wordcloud import WordCloud
 import spacy
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
@@ -15,11 +15,15 @@ import numpy as np
 import re
 import nltk
 from nltk.corpus import stopwords
+import gensim
+from gensim.utils import simple_preprocess
 
 from Utils.Enums import RomanianParty, ManifestoCodes
 from Utils.UtilityFunctions import preprocess_text, find_word_in_manifestos
 from analysis.HandCodingAnalysis import calculate_hand_coded_similarity, analyze_party_codes
+from analysis.SentimentAnalysis import print_sentiment_analysis
 from analysis.TextAnalysisTFIDF import analyze_word_commonality, find_party_specific_vocabulary
+from analysis.TopicModelin import ManifestoTopicModeling
 from api.ManifestoApi import ManifestoAPI
 
 
@@ -52,7 +56,18 @@ def main():
 			full_text = ''
 			for item in manifesto.text_items:
 				full_text = full_text + item.text + ' '
+			number_of_words = len(full_text.split())
+			print(f"Number of words before preprocess: {number_of_words}")
 			full_text = preprocess_text(full_text.strip())
+			number_of_words = len(full_text.split())
+			print(f"Number of words after preprocess: {number_of_words}")
+			# wordcloud = WordCloud(background_color='white',
+			#                       contour_width=3,
+			#                       max_words=5000,
+			#                       contour_color='steelblue',
+			#                       width=1000,
+			#                       height=1000).generate(full_text)
+			# wordcloud.to_file(f"wordcloud_{RomanianParty.get_name(manifesto.metadata.party_id)}.png")
 			manifesto_corpus.append(full_text)
 			print(full_text)
 	except Exception as e:
@@ -85,10 +100,11 @@ def main():
 	pd.set_option('display.max_columns', None)
 	pd.set_option('display.width', None)
 	similarity_df = pd.DataFrame(similarity_matrix, columns=party_names, index=party_names)
-	print("\nFull Document Similarity Matrix:")
+	print("\nFull Document Similarity Matrix with TF-IDF:")
 	print(similarity_df)
 
 	# Matricea de similiaritate intre manifesto-uri cu codurile de la Manifesto Project
+	print("\nFull Document Similarity Matrix with Hand Coding frequencies:")
 	code_similarity_df = calculate_hand_coded_similarity(manifesto_data, party_names)
 	print(code_similarity_df)
 
@@ -99,9 +115,24 @@ def main():
 	# Top coduri si procentajele pentru fiecare partid
 	analyze_party_codes(manifesto_data)
 
+	# Initialize and use
+	topic_modeler = ManifestoTopicModeling()
+	model, party_topics, topic_df = topic_modeler.perform_topic_modeling(
+		manifesto_corpus,
+		party_names
+	)
+
+	# Print the detailed topic DataFrame
+	print("\nDetailed Topic Analysis:")
+	pd.set_option('display.max_colwidth', None)
+	print(topic_df)
+
+	# Usage
+	print_sentiment_analysis(manifesto_data, party_names, party_topics, model)
+
 	while True:
 		search_word = input("\nEnter a word to search for (or 'quit' to exit): ")
-
+        # cuvinte interesante: pension, justice, corruption, education, health,
 		if search_word.lower() == 'quit':
 			break
 

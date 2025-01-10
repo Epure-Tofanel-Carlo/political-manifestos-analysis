@@ -1,3 +1,6 @@
+from typing import List, Dict
+
+import nltk
 import spacy
 import re
 
@@ -13,6 +16,8 @@ def preprocess_text(text):
 	doc = nlp(text)
 	# get stopwords
 	# nltk.download('stopwords') asta trb rulat doar o data
+	# nltk.download('punkt_tab')
+	# nltk.download('wordnet')
 	stop_words = set(stopwords.words('english'))
 
 	# fara stopwords, tinem doar substantive, adjective si verbe, lematizam cuvintele, le scoatem si pe alea scurte
@@ -58,3 +63,51 @@ def find_word_in_manifestos(word, manifesto_data, manifesto_corpus):
 		print(f"The word '{search_word}' was not found in any manifesto.")
 		print("Note: Words are lemmatized and only nouns, adjectives, and verbs are kept.")
 		print("Try searching for the base form of the word (e.g., 'vote' instead of 'voting')")
+
+
+def preprocess_for_sentiment(text: str) -> str:
+	"""
+	Preprocess text while maintaining punctuation and case for VADER
+	Only removes extra whitespace and normalizes quotes/apostrophes
+	"""
+	# Normalize quotes and apostrophes
+	text = text.replace('"', '"').replace('"', '"')
+	text = text.replace(''', "'").replace(''', "'")
+
+	# Remove extra whitespace
+	text = ' '.join(text.split())
+
+	return text
+
+
+def get_topic_sentences(text: str, topic_words: List[str], synonyms: Dict[str, List[str]] = None) -> List[str]:
+	"""
+	Extract sentences containing topic words or their synonyms
+
+	Args:
+		text: Original text
+		topic_words: List of words defining the topic
+		synonyms: Dictionary mapping words to their synonyms
+	"""
+	# First preprocess text for sentiment analysis
+	text = preprocess_for_sentiment(text)
+
+	# Split into sentences (use nltk's sent_tokenize to handle abbreviations properly)
+	sentences = nltk.sent_tokenize(text)
+
+	# Create set of all words to look for
+	search_words = set(topic_words)
+	if synonyms:
+		for word in topic_words:
+			if word in synonyms:
+				search_words.update(synonyms[word])
+
+	# Find sentences containing any topic word or synonym
+	topic_sentences = []
+	for sentence in sentences:
+		# Create a lowercase version for searching but keep original for output
+		sentence_lower = sentence.lower()
+		if any(word.lower() in sentence_lower for word in search_words):
+			topic_sentences.append(sentence)
+
+	return topic_sentences
